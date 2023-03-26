@@ -17,11 +17,11 @@ class LinearProblem:
         self.operator_pattern = r'[<>]?=|[<>]'  # matches any inequality operator
         self.constant_pattern = r'[+-]?\d+'  # matches any integer constant with optional
 
-    def extract_coefficients(self, constraint_str, variables):
+    def extract_coefficients(self, constraint_str):
         # Extract the coefficients the term string
         coefficients = []
         constraint_str = constraint_str.replace(' ', '')
-        for variable in variables:
+        for variable in self.variables:
             coefficient = re.search(r'([+-]?\d+)?' + variable, constraint_str)
             if coefficient is None:
                 coefficients.append(0)
@@ -43,7 +43,7 @@ class LinearProblem:
         self.variables = variables
         self.variable_count = len(variables)
         # inverted coefficients to set objective function equal to zero
-        coefficients = [-c for c in self.extract_coefficients(line, variables)]
+        coefficients = [-c for c in self.extract_coefficients(line)]
         self.obj.extend(coefficients)
         # add slack variables to objective function
         self.obj.extend([0 for _ in range(self.constraint_count)])
@@ -58,8 +58,7 @@ class LinearProblem:
             # Skip blank lines and comments
             if line.strip() == '' or line.strip()[0] == '#':
                 continue
-            variables = re.findall(self.variable_pattern, line)
-            coefficients = self.extract_coefficients(line, self.variables)
+            coefficients = self.extract_coefficients(line)
             constant = int(re.findall(self.constant_pattern, line)[-1])
             # first columns are the decision variable coefficients
             cur_constraint_row.extend(coefficients)
