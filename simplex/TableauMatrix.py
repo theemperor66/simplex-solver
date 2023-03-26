@@ -1,11 +1,22 @@
 class TableauMatrix:
     # constructor
-    def __init__(self, variables, constraints, objective):
-        self.rows = constraints + 1
-        self.cols = variables * 2 + 2
-        self.variable_count = variables
-        self.constraint_count = constraints
+    def __init__(self, variable_count: int, constraint_count: int, objective: list):
+        self.rows = constraint_count + 1
+        self.cols = variable_count + constraint_count + 2
+        self.variable_count = variable_count
+        self.variables = ["x" + i for i in range(variable_count)]
+        self.constraint_count = constraint_count
         self.matrix = [objective]
+
+    def __init__(self, variables: list, constraints: list, objective: list):
+        self.rows = len(constraints) + 1
+        self.cols = len(variables) + len(constraints) + 2
+        self.variable_count = len(variables)
+        self.variables = variables
+        self.constraint_count = len(constraints)
+        self.matrix = [objective]
+        for constraint in constraints:
+            self.add_constraint(constraint)
 
     def add_variable(self):
         self.cols += 1
@@ -76,7 +87,7 @@ class TableauMatrix:
         solution = {}
         for i in range(len(resulting_values)):
             # x1, x2, x3, ..., s1, s2, s3, ... could all be active variables
-            key = "x" + str(i + 1) if i < self.variable_count else "s" + str(i - self.variable_count + 1)
+            key = self.variables[i] if i < self.variable_count else "s" + str(i - self.variable_count + 1)
             solution[key] = resulting_values[i]
         return solution
 

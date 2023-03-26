@@ -11,6 +11,7 @@ class LinearProblem:
         self.obj = None
         self.constraints = []
         self.variable_count = 0
+        self.variables = []
         self.constraint_count = 0
         self.variable_pattern = r'x\d+'  # matches any variable x1, x2, x3, etc.
         self.operator_pattern = r'[<>]?=|[<>]'  # matches any inequality operator
@@ -32,44 +33,47 @@ class LinearProblem:
         """Parse the problem from the file."""
         # TODO: do not assume that all operators are equalized
         # TODO: do not assume that all variables are x1, x2, x3, etc.
+        self.constraint_count = len(f.readlines()) - 2
+        f.seek(0)
         self.name = f.readline().strip()
         # read in objective function as row vector
         self.obj = []
         line = f.readline()
         variables = re.findall(self.variable_pattern, line)
+        self.variables = variables
         self.variable_count = len(variables)
         # inverted coefficients to set objective function equal to zero
         coefficients = [-c for c in self.extract_coefficients(line, variables)]
         self.obj.extend(coefficients)
         # add slack variables to objective function
-        self.obj.extend([0 for i in range(self.variable_count)])
+        self.obj.extend([0 for _ in range(self.constraint_count)])
         # add optimization variable to objective function
         self.obj.append(1)
         # add constant to objective function
         self.obj.append(0)
         # read in constraints as row vectors
+        constraint_counter = 0
         for line in f:
             cur_constraint_row = []
             # Skip blank lines and comments
             if line.strip() == '' or line.strip()[0] == '#':
                 continue
             variables = re.findall(self.variable_pattern, line)
-            coefficients = self.extract_coefficients(line, variables)
-            operator = re.search(self.operator_pattern, line).group()
+            coefficients = self.extract_coefficients(line, self.variables)
             constant = int(re.findall(self.constant_pattern, line)[-1])
             # first columns are the decision variable coefficients
             cur_constraint_row.extend(coefficients)
             # next columns are the slack variable coefficients
             cur_constraint_row.extend(
-                [1 if i == self.constraint_count else 0 for i in range(self.variable_count)])
+                [1 if i == constraint_counter else 0 for i in range(0, self.constraint_count)])
             # add column for optimization variable
             cur_constraint_row.append(0)
             # last column is the constant
             cur_constraint_row.append(constant)
-            # increase constraint count
-            self.constraint_count += 1
             # add constraint to list of constraints
             self.constraints.append(cur_constraint_row)
+            # increase constraint counter
+            constraint_counter += 1
 
 
 class LinearProblemParser:
@@ -92,9 +96,7 @@ class LinearProblemParser:
 
     def as_tableau(self):
         """Return the parsed problem as a tableau."""
-        # instantiate tableau with variable count, constraint count, and objective function
-        t = TableauMatrix(self.problem.variable_count, self.problem.constraint_count, self.problem.obj)
-        # add constraints to tableau
-        for constraint in self.problem.constraints:
-            t.add_constraint(constraint)
+        # instantiate tableau with variables, constraints, and objective function
+        t = TableauMatrix(variables=self.problem.variables, constraints=self.problem.constraints,
+                          objective=self.problem.obj)
         return t

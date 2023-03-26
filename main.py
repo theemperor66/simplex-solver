@@ -1,6 +1,6 @@
 import simplex.ProblemParser as parser
 
-LP = parser.LinearProblemParser('./problems/linear_problem_2')
+LP = parser.LinearProblemParser('./cur_proplem')
 LP.parse()
 LP = LP.as_tableau()
 LP.print()
