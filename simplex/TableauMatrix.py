@@ -1,13 +1,5 @@
 class TableauMatrix:
     # constructor
-    def __init__(self, variable_count: int, constraint_count: int, objective: list):
-        self.rows = constraint_count + 1
-        self.cols = variable_count + constraint_count + 2
-        self.variable_count = variable_count
-        self.variables = ["x" + i for i in range(variable_count)]
-        self.constraint_count = constraint_count
-        self.matrix = [objective]
-
     def __init__(self, variables: list, constraints: list, objective: list):
         self.rows = len(constraints) + 1
         self.cols = len(variables) + len(constraints) + 2
@@ -33,6 +25,7 @@ class TableauMatrix:
         # find pivot column
         pivot_col = 0
         for i in range(1, self.variable_count):
+            # pivot column is the one with the most negative coefficient in the objective row
             if self.matrix[-1][i] < self.matrix[-1][pivot_col]:
                 pivot_col = i
 
@@ -42,7 +35,6 @@ class TableauMatrix:
             if self.matrix[i][pivot_col] > 0:
                 pivot_row = i
                 break
-
         for i in range(pivot_row + 1, self.rows - 1):
             if self.matrix[i][pivot_col] > 0:
                 if self.matrix[i][-1] / self.matrix[i][pivot_col] < self.matrix[pivot_row][-1] / self.matrix[pivot_row][
